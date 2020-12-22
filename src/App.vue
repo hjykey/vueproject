@@ -1,5 +1,5 @@
 <template>
-  <div id="app">App 根组件</div>
+  <div id="app"><router-view></router-view></div>
 </template>
 
 <script></script>
