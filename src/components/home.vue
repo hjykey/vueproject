@@ -14,21 +14,22 @@
     </el-header>
     <el-container>
       <!-- 侧边栏菜单区 -->
-      <el-aside width="200px">
-        <div class="toggle-button">|||</div>
+      <el-aside :width="isCollapse ? '64px' : '200px'">
+        <div class="toggle-button" @click="togglecollapse">|||</div>
         <el-menu
-          default-active="2"
+          :default-active="activePath"
           class="el-menu-vertical-demo"
-          @open="handleOpen"
-          @close="handleClose"
           background-color="#333744"
           text-color="#fff"
           active-text-color="#409eff"
           :unique-opened="true"
+          :collapse="isCollapse"
+          :collapse-transition="false"
+          :router="true"
         >
           <!-- 含有下拉菜单的菜单 -->
           <el-submenu
-            :index="item.id + ''"
+            :index="'/' + item.path"
             v-for="item in menuList"
             :key="item.id"
           >
@@ -41,9 +42,10 @@
             </template>
             <!-- 二级菜单组 -->
             <el-menu-item
-              :index="subitem.id + ''"
+              :index="'/' + subitem.path"
               v-for="subitem in item.children"
               :key="subitem.id"
+              @click="saveNavState('/' + subitem.path)"
             >
               <template>
                 <i class="el-icon-menu"></i>
@@ -69,7 +71,7 @@
         </el-menu>
       </el-aside>
       <!-- 中间区域 -->
-      <el-main>Main</el-main>
+      <el-main><router-view></router-view></el-main>
     </el-container>
   </el-container>
 </template>
@@ -85,11 +87,21 @@ export default {
         102: 'iconfont icon-danju',
         101: 'iconfont icon-shangpin',
         145: 'iconfont icon-baobiao'
-      }
+      },
+      // 折叠
+      isCollapse: false,
+      // 激活的nav项
+      activePath: ''
     }
   },
   created () {
     this.getMenuList()
+    this.activePath = window.sessionStorage.getItem('activePath')
+  },
+  updated () {
+    const path = window.location.hash.split('#')
+    this.activePath = path[1]
+    console.log(this.activePath)
   },
   methods: {
     logout () {
@@ -102,10 +114,19 @@ export default {
       // console.log(res)
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.menuList = res.data
+    },
+    togglecollapse () {
+      this.isCollapse = !this.isCollapse
+    },
+    // 保存链接激活状态
+    saveNavState (activePath) {
+      window.sessionStorage.setItem('activePath', activePath)
+      this.activePath = activePath
     }
   }
 }
 </script>
+
 <style lang="less" scoped>
 .el-header,
 .el-footer {
@@ -139,8 +160,8 @@ export default {
 .el-main {
   background-color: #eaedf1;
   color: #333;
-  text-align: center;
-  line-height: 160px;
+  // text-align: center;
+  // line-height: 160px;
 }
 
 .el-container {
