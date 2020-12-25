@@ -101,7 +101,7 @@ export default {
   updated () {
     const path = window.location.hash.split('#')
     this.activePath = path[1]
-    console.log(this.activePath)
+    // console.log(this.activePath)
   },
   methods: {
     logout () {
@@ -109,7 +109,7 @@ export default {
       this.$router.push('/login')
     },
     async getMenuList () {
-      // 结构赋值，promise返回的对象里的data赋值给res
+      //  // { data: res }解构对象中的data属性赋值给data并重命名为res
       const { data: res } = await this.$http.get('menus')
       // console.log(res)
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
@@ -168,7 +168,7 @@ export default {
   margin-bottom: 1px;
   height: 100%;
 }
-// 图标后于文字间距
+// 图标后与文字间距
 .iconfont {
   margin-right: 5px;
 }
@@ -178,6 +178,6 @@ export default {
   font-size: 10px;
   line-height: 24px;
   text-align: center;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.5rem;
 }
 </style>
