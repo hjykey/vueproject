@@ -84,13 +84,16 @@
         :model="addForm"
         :rules="addFormRules"
         ref="addFormRef"
-        label-width="70px"
+        label-width="80px"
       >
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addForm.username"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="addForm.password"></el-input>
+          <el-input v-model="addForm.password" type="password"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="checkpassword">
+          <el-input v-model="addForm.checkpassword" type="password"></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="addForm.email"></el-input>
@@ -102,9 +105,7 @@
       <!-- 按钮位置 -->
       <span slot="footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button type="primary" @click="addUser">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -126,6 +127,15 @@ export default {
         }
       }, 1000)
     }
+    var checkPassword = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('密码不能为空'))
+      } else if (value !== this.addForm.password) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
     return {
       queryInfo: {
         query: '',
@@ -137,8 +147,15 @@ export default {
         total: 1,
         users: []
       },
+
       addDialogVisible: false,
-      addForm: { username: '', password: '', email: '', mobile: '' }, // 添加用户的表单数据
+      addForm: {
+        username: '',
+        password: '',
+        checkpassword: '',
+        email: '',
+        mobile: ''
+      }, // 添加用户的表单数据
       addFormRules: {
         // 添加用户数据表单的规则
         username: [
@@ -162,6 +179,13 @@ export default {
             validator: checkMobile,
             required: true,
             message: '请输入正确的手机号',
+            trigger: 'blur'
+          }
+        ],
+        checkpassword: [
+          {
+            validator: checkPassword,
+            required: true,
             trigger: 'blur'
           }
         ]
@@ -208,6 +232,26 @@ export default {
     // 关闭添加用户弹出框
     addDialogClosed () {
       this.$refs.addFormRef.resetFields()
+    },
+    // 点击按钮，确定添加用户
+    addUser () {
+      this.$refs.addFormRef.validate(async valid => {
+        // console.log(valid)
+        if (!valid) return
+        // 验证通过，发起添加用户的请求
+        const { username, password, email, mobile } = this.addForm
+        const { data: res } = await this.$http.post('users', {
+          username,
+          password,
+          email,
+          mobile
+        })
+        // console.log(res)
+        if (res.meta.status !== 201) return this.$message.error(res.meta.msg)
+        this.$message.success(res.meta.msg)
+        this.addDialogVisible = false
+        this.getUserList() // 刷新列表
+      })
     }
   }
 }
