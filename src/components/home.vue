@@ -6,7 +6,7 @@
         <img
           src="../assets/ooopic.png"
           alt="未找到图片"
-          style=" width: 50px; height: 50px;object-fit:cover"
+          style=" width: 60px; height: 60px;object-fit:contain"
         />
         <span>XXXXXXXX平台</span>
       </div>
@@ -103,6 +103,12 @@ export default {
     this.activePath = path[1]
     // console.log(this.activePath)
   },
+  // mounted () {
+  //   console.log('打印一次')
+  //   setInterval(() => {
+  //     console.log('打印一次')
+  //   }, 1000)
+  // },
   methods: {
     logout () {
       window.sessionStorage.clear()
