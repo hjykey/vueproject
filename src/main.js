@@ -3,6 +3,8 @@ import App from './App.vue'
 import router from './router'
 import axios from 'axios'
 import './plugins/element.js'
+import './plugins/directives.js'
+
 // 定义了全局样式
 import './assets/css/global.css'
 // 第三方ico

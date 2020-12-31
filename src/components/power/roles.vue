@@ -100,11 +100,12 @@
         show-checkbox
         node-key="id"
         :default-checked-keys="defKeys"
+        ref="treeRef"
       ></el-tree>
 
       <span slot="footer">
         <el-button @click="setRightDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="editUser()">确 定</el-button>
+        <el-button type="primary" @click="allotRights()">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -123,7 +124,9 @@ export default {
         label: 'authName'
       },
       // 树中默认选中的节点,父级节点会自动半选
-      defKeys: []
+      defKeys: [],
+      // 当前被分配角色的ID
+      roleId: ''
     }
   },
   created () {
@@ -167,6 +170,8 @@ export default {
       this.rightList = res.data
       // 调用递归函数获取三级节点，显示为默认
       this.getLeafKeys(role, this.defKeys)
+      // 设置当前被分配的角色的ID
+      this.roleId = role.id
       this.setRightDialogVisible = true
     },
     // 递归获取三级权限的ID并保存到defkeys数组
@@ -177,7 +182,26 @@ export default {
     },
     // 监听设置权限对话框关闭
     setRightDialogClosed () {
-      this.defKeys = []
+      this.defKeys = [] // 清理上一次默认勾选的权限
+      this.roleId = ''
+    },
+    // 分配权限
+    async allotRights () {
+      const keys = [
+        ...this.$refs.treeRef.getCheckedKeys(),
+        ...this.$refs.treeRef.getHalfCheckedKeys()
+      ].join(',')
+      console.log(keys)
+      const { data: res } = await this.$http.post(
+        `roles/${this.roleId}/rights`,
+        {
+          rids: keys
+        }
+      )
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.getRolesList()
+      this.setRightDialogVisible = false
+      this.$message.success(res.meta.msg)
     }
   }
 }
