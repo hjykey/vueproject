@@ -4,7 +4,8 @@ import router from './router'
 import axios from 'axios'
 import './plugins/element.js'
 import './plugins/directives.js'
-
+// 第三方组件
+import TreeTable from 'vue-table-with-tree-grid'
 // 定义了全局样式
 import './assets/css/global.css'
 // 第三方ico
@@ -21,7 +22,8 @@ axios.interceptors.request.use(config => {
   return config
 })
 Vue.prototype.$http = axios
-
+// 全局注册组件,tree-table为自定义名称
+Vue.component('tree-table', TreeTable)
 new Vue({
   router,
   render: h => h(App)
