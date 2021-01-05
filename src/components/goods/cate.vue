@@ -90,6 +90,7 @@
           <el-input v-model="addCateForm.cat_name"></el-input>
         </el-form-item>
         <el-form-item label="父级分类:">
+          <!-- 级联框 -->
           <el-cascader
             v-model="selectedParentLevel"
             :options="parentcateList"
