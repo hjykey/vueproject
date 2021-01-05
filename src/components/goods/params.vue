@@ -232,6 +232,7 @@ export default {
   },
   created () {
     this.getAllCateList()
+    console.log(this.$scopedSlots)
   },
   methods: {
     //   获取所有商品分类表
@@ -351,6 +352,10 @@ export default {
     handleInputConfirm () {},
     showInput (val) {
       val.inputVisible = true
+      // input获取焦点
+      this.$nextTick(_ => {
+        this.$refs.saveTagInput.$refs.input.focus()
+      })
     }
   },
   computed: {
@@ -378,6 +383,6 @@ export default {
   margin: 0.1rem;
 }
 .input-new-tag {
-  width: 2rem;
+  width: 10rem;
 }
 </style>
