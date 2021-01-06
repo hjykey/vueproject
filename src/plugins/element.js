@@ -32,9 +32,12 @@ import {
   Cascader,
   Alert,
   Tabs,
-  TabPane
+  TabPane,
+  Steps,
+  Step
 } from 'element-ui'
-
+// 修改Dialog的close-on-click-modal属性，点击其他地方不关闭对话框
+Dialog.props.closeOnClickModal.default = false
 Vue.use(Button)
   .use(Form)
   .use(FormItem)
@@ -66,6 +69,8 @@ Vue.use(Button)
   .use(Alert)
   .use(Tabs)
   .use(TabPane)
+  .use(Steps)
+  .use(Step)
 
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm

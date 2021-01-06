@@ -24,6 +24,19 @@ axios.interceptors.request.use(config => {
 Vue.prototype.$http = axios
 // 全局注册组件,tree-table为自定义名称
 Vue.component('tree-table', TreeTable)
+// 全局过滤器,用来获取指定格式的日期
+Vue.filter('dateFormat', function (originVal) {
+  const dt = new Date(originVal)
+  const y = dt.getFullYear()
+  const m = (dt.getMonth() + 1 + '').padStart(2, '0')
+  const d = (dt.getDate() + '').padStart(2, '0')
+  const hh = (dt.getFullYear() + '').padStart(2, '0')
+  const mm = (dt.getMinutes() + '').padStart(2, '0')
+  const ss = (dt.getSeconds() + '').padStart(2, '0')
+  // 返回日期格式的模板`yyyy-mm-dd hh:mm:ss`
+
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
+})
 // render: h => h(App)的完整写法是render:function(createElement,context){return createElement(obj)}
 
 // createElement是render的核心方法，通常惯例写成h

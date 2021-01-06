@@ -59,7 +59,7 @@
                   v-for="(item, index) in props.row.attr_vals"
                   :key="index"
                   closable
-                  @close="delete props.row.attr_vals[index]"
+                  @close="handleClose(index, props.row)"
                   >{{ item }}</el-tag
                 >
                 <!-- 输入文本框 -->
@@ -69,8 +69,8 @@
                   v-model="props.row.inputValue"
                   ref="saveTagInput"
                   size="small"
-                  @keyup.enter.native="handleInputConfirm"
-                  @blur="handleInputConfirm"
+                  @keyup.enter.native="handleInputConfirm(props.row)"
+                  @blur="handleInputConfirm(props.row)"
                 >
                 </el-input>
                 <!-- 添加按钮 -->
@@ -79,7 +79,7 @@
                   class="button-new-tag"
                   size="small"
                   @click="showInput(props.row)"
-                  >+ New Tag</el-button
+                  >+标签</el-button
                 >
               </template>
             </el-table-column>
@@ -121,7 +121,27 @@
                   v-for="(item, index) in props.row.attr_vals"
                   :key="index"
                   closable
+                  @close="handleClose(index, props.row)"
                   >{{ item }}</el-tag
+                >
+                <!-- 输入文本框 -->
+                <el-input
+                  class="input-new-tag"
+                  v-if="props.row.inputVisible"
+                  v-model="props.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(props.row)"
+                  @blur="handleInputConfirm(props.row)"
+                >
+                </el-input>
+                <!-- 添加按钮 -->
+                <el-button
+                  v-else
+                  class="button-new-tag"
+                  size="small"
+                  @click="showInput(props.row)"
+                  >添加标签</el-button
                 >
               </template>
             </el-table-column>
@@ -232,7 +252,6 @@ export default {
   },
   created () {
     this.getAllCateList()
-    console.log(this.$scopedSlots)
   },
   methods: {
     //   获取所有商品分类表
@@ -269,6 +288,8 @@ export default {
       // 选中的非三级分类为非法,清空选择项
       if (this.selectedItem.length !== 3) {
         this.selectedItem = []
+        this.manyTableData = []
+        this.onlyTableData = []
       } else this.getAttrList()
     },
     // 监听选中的标签页
@@ -293,6 +314,7 @@ export default {
         )
         if (res.meta.status !== 201) return this.$message.error(res.meta.msg)
         this.addAttrdialogVisible = false
+        this.$message.success(res.meta.msg)
         this.getAttrList()
       })
     },
@@ -349,13 +371,60 @@ export default {
       this.getAttrList()
     },
     // 文本框失去焦点或enter触发
-    handleInputConfirm () {},
+    async handleInputConfirm (val) {
+      if (val.inputValue.trim().length === 0) {
+        val.inputValue = ''
+        val.inputVisible = false
+      } else {
+        val.attr_vals.push(val.inputValue.trim())
+        val.inputValue = ''
+        val.inputVisible = false
+        this.editForm.cat_id = val.cat_id
+        this.editForm.attr_id = val.attr_id
+        this.editForm.attr_sel = val.attr_sel
+        this.editForm.attr_name = val.attr_name
+        this.editForm.attr_vals = val.attr_vals.join(' ')
+        // console.log(val)
+        const { data: res } = await this.$http.put(
+          `categories/${this.editForm.cat_id}/attributes/${this.editForm.attr_id}`,
+          {
+            attr_name: this.editForm.attr_name,
+            attr_sel: this.editForm.attr_sel,
+            attr_vals: this.editForm.attr_vals
+          }
+        )
+        if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+        this.$message.success(res.meta.msg)
+      }
+    },
     showInput (val) {
       val.inputVisible = true
       // input获取焦点
+      // $nextTick当页面上元素被重新渲染后执行回调函数中的代码
+      // 直接使用回调函数会出现找不到元素的情况，所以nexttick等待渲染完成
       this.$nextTick(_ => {
         this.$refs.saveTagInput.$refs.input.focus()
       })
+    },
+    // 监视关闭tag标签触发的事件
+    async handleClose (index, val) {
+      val.attr_vals.splice(index, 1)
+      this.editForm.cat_id = val.cat_id
+      this.editForm.attr_id = val.attr_id
+      this.editForm.attr_sel = val.attr_sel
+      this.editForm.attr_name = val.attr_name
+      this.editForm.attr_vals = val.attr_vals.join(' ')
+      // console.log(val)
+      const { data: res } = await this.$http.put(
+        `categories/${this.editForm.cat_id}/attributes/${this.editForm.attr_id}`,
+        {
+          attr_name: this.editForm.attr_name,
+          attr_sel: this.editForm.attr_sel,
+          attr_vals: this.editForm.attr_vals
+        }
+      )
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.$message.success(res.meta.msg)
     }
   },
   computed: {
