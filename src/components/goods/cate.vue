@@ -15,7 +15,7 @@
           ></el-col
         ></el-row
       >
-      <!-- 表格区 -->
+      <!-- 表格区 tree-table为vue-table-with-tree-grid组件-->
       <tree-table
         style="margin-top:0.7rem"
         :data="cateList"

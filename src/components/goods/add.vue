@@ -44,6 +44,8 @@
           v-model="activeIndex"
           :tab-position="'left'"
           style="margin:1rem"
+          :before-leave="beforeTabLeave"
+          @tab-click="tabClicked"
         >
           <el-tab-pane label="基本信息" name="0">
             <el-form-item label="商品名称" prop="goods_name">
@@ -58,26 +60,84 @@
             <el-form-item label="商品数量" prop="goods_number">
               <el-input v-model="addForm.goods_number" type="number"></el-input>
             </el-form-item>
-            <el-form-item label="商品分类">
-              <el-cascader
-                v-model="selectedItem"
-                :options="cateList"
-                :props="{
-                  expandTrigger: 'hover',
-                  value: 'cat_id',
-                  label: 'cat_name',
-                  children: 'children'
-                }"
-                @change="handleSelectedItemChange"
-              ></el-cascader> </el-form-item
+            <el-form-item label="商品分类" prop="goods_cat">
+              <el-tooltip effect="dark" content="三级分类有效" placement="top">
+                <el-cascader
+                  v-model="addForm.goods_cat"
+                  :options="cateList"
+                  :props="{
+                    expandTrigger: 'hover',
+                    value: 'cat_id',
+                    label: 'cat_name',
+                    children: 'children'
+                  }"
+                  @change="handleSelectedItemChange"
+                ></el-cascader> </el-tooltip></el-form-item
           ></el-tab-pane>
-          <el-tab-pane label="商品参数" name="1">商品参数</el-tab-pane>
-          <el-tab-pane label="商品属性" name="2">商品属性</el-tab-pane>
-          <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
-          <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
+          <el-tab-pane label="商品参数" name="1">
+            <el-form-item
+              v-for="item1 in manyTableData"
+              :key="item1.attr_id"
+              :label="item1.attr_name"
+            >
+              <el-checkbox-group v-model="item1.attr_vals">
+                <el-checkbox
+                  :label="item2"
+                  v-for="(item2, index) in item1.attr_vals"
+                  :key="index"
+                  border
+                  size="small"
+                  style="margin-right:0.5rem"
+                ></el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-tab-pane>
+          <el-tab-pane label="商品属性" name="2">
+            <el-form-item
+              :label="item.attr_name"
+              v-for="item in onlyTableData"
+              :key="item.attr_id"
+            >
+              <el-input v-model="item.attr_vals"></el-input> </el-form-item
+          ></el-tab-pane>
+          <el-tab-pane label="商品图片" name="3"
+            ><el-upload
+              :action="uploadUrl"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              list-type="picture"
+              :headers="headerobj"
+              :on-success="handleSuccess"
+            >
+              <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip">
+                只能上传jpg/png文件，且不超过500kb
+              </div>
+            </el-upload></el-tab-pane
+          >
+          <el-tab-pane label="商品内容" name="4">
+            <!-- 插入了富文本编辑器 -->
+            <quill-editor v-model="addForm.goods_introduce" />
+            <el-button type="primary" style="margin-top:5px" @click="add"
+              >添加商品</el-button
+            >
+          </el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
+    <!-- 图片预览窗口 -->
+    <el-dialog
+      title="图片预览"
+      :visible.sync="previewVisible"
+      width="80%"
+      v-dialogDrag
+    >
+      <img
+        :src="previewPath"
+        style="width:100%;
+height:auto"
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -91,7 +151,11 @@ export default {
         goods_name: '',
         goods_price: 0,
         goods_weight: 0,
-        goods_number: 0
+        goods_number: 0,
+        // 商品分类，最高三级，各级以'，'分割
+        goods_cat: [],
+        pics: [],
+        goods_introduce: ''
       },
       rules: {
         goods_name: [
@@ -105,12 +169,24 @@ export default {
         ],
         goods_number: [
           { required: true, message: '请输入商品数量', trigger: 'blur' }
+        ],
+        goods_cat: [
+          { required: true, message: '请选择商品分类', trigger: 'blur' }
         ]
       },
       // 商品类型列表
-      cateList: {},
-      // 选中的商品分类
-      selectedItem: ''
+      cateList: [],
+      // 商品动态参数列表
+      manyTableData: [],
+      // 商品静态属性列表
+      onlyTableData: [],
+      uploadUrl: 'http://127.0.0.1:8888/api/private/v1/upload',
+      headerobj: {
+        Authorization: window.sessionStorage.getItem('token')
+      },
+      // 图片预览的绝对路径
+      previewPath: '',
+      previewVisible: false
     }
   },
   created () {
@@ -121,9 +197,93 @@ export default {
       const { data: res } = await this.$http.get('categories')
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.cateList = res.data
-      console.log(this.cateList)
+      // console.log(res.data)
     },
-    handleSelectedItemChange () {}
+    // 级联选中的商品分类，三级有效
+    handleSelectedItemChange (newitem) {
+      if (newitem.length !== 3) {
+        this.addForm.goods_cat = []
+      }
+    },
+    // 监听tab切换，返回false或者promise的reject则阻止切换
+    beforeTabLeave (activeName, oldActiveName) {
+      // this.$refs.addFormRef.validate(async (boolean, object) => {
+      //   if (!boolean) return console.log(object)
+      //   // 验证通过
+      //   // console.log(res)
+      // })
+      if (oldActiveName === '0' && this.addForm.goods_cat.length !== 3) {
+        this.$message.error('请选择商品分类')
+        return false
+      } else return true
+    },
+    // tabs切换到选中的标签页
+    async tabClicked () {
+      // 访问了动态参数面板
+      if (this.activeIndex === '1') {
+        const { data: res } = await this.$http.get(
+          `categories/${this.catId}/attributes`,
+          {
+            params: { sel: 'many' }
+          }
+        )
+        if (res.meta.status !== 200) return this.$message.error(res.meta.status)
+        res.data.forEach(item => {
+          item.attr_vals =
+            item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+        })
+        this.manyTableData = res.data
+        // console.log(this.manyTableData)
+      } else if (this.activeIndex === '2') {
+        const { data: res } = await this.$http.get(
+          `categories/${this.catId}/attributes`,
+          {
+            params: { sel: 'only' }
+          }
+        )
+        if (res.meta.status !== 200) return this.$message.error(res.meta.status)
+        this.onlyTableData = res.data
+        // console.log(this.onlyTableData)
+      }
+    },
+    handlePreview (file) {
+      this.previewPath = file.response.data.url
+      this.previewVisible = true
+    },
+    handleRemove (file) {
+      // 获取要删除的图片的临时路径
+      const filePath = file.response.data.tmp_path
+      // 从pics数组中查找索引值
+      const index = this.addForm.pics.findIndex(x => x.pic === filePath)
+      // 根据索引删除该对象
+      this.addForm.pics.splice(index, 1)
+    },
+    // 图片上传成功后的操作
+    handleSuccess (response) {
+      if (response.meta.status === 200) {
+        // 拼接一个图片信息
+        const pidInfo = { pic: response.data.tmp_path }
+        // 保存到pics数组中
+        this.addForm.pics.push(pidInfo)
+        this.$message.success(response.meta.msg)
+      }
+    },
+    // 点击添加商品后发起添加商品请求
+    add () {
+      this.$refs.addFormRef.validate(async (boolean, object) => {
+        if (!boolean) {
+          for (var i in object) {
+            return this.$message.error(object[i][0].message)
+          }
+        }
+      })
+    }
+  },
+  computed: {
+    catId () {
+      if (this.addForm.goods_cat.length === 3) return this.addForm.goods_cat[2]
+      else return null
+    }
   }
 }
 </script>

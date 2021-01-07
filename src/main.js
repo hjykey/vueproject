@@ -11,6 +11,15 @@ import './assets/css/global.css'
 // 第三方ico
 import './assets/fonts/iconfont.css'
 
+// 导入vue-quill-editor组件的样式
+import 'quill/dist/quill.core.css' // import styles
+import 'quill/dist/quill.snow.css' // for snow theme
+import 'quill/dist/quill.bubble.css' // for bubble theme
+// 导入富文本组件
+import VueQuillEditor from 'vue-quill-editor'
+// 全部挂载,用use注册的组件内部必须有具有install方法,否则请用component
+Vue.use(VueQuillEditor /* { default global options } */)
+// 阻止启动生产消息
 Vue.config.productionTip = false
 // 配置请求的根路径
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'

@@ -116,7 +116,7 @@ export default {
       const { data: res } = await this.$http.get('goods', {
         params: this.queryInfo
       })
-      console.log(res)
+      // console.log(res)
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.goodsList = res.data.goods
       this.total = res.data.total
