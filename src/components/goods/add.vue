@@ -142,6 +142,7 @@ height:auto"
 </template>
 
 <script>
+import _ from 'lodash'
 export default {
   data () {
     return {
@@ -155,7 +156,9 @@ export default {
         // 商品分类，最高三级，各级以'，'分割
         goods_cat: [],
         pics: [],
-        goods_introduce: ''
+        goods_introduce: '',
+        // 参数数组，包含静态属性和动态参数
+        attrs: []
       },
       rules: {
         goods_name: [
@@ -272,9 +275,41 @@ export default {
     add () {
       this.$refs.addFormRef.validate(async (boolean, object) => {
         if (!boolean) {
+          // for..in循环只能获取键名，不能获得键值
+          // for..of循环允许遍历获得键值 for(let [key,value] of object),对象需原生的 iterator 接口
+
           for (var i in object) {
             return this.$message.error(object[i][0].message)
           }
+        } else {
+          // 添加动态参数
+          this.manyTableData.forEach(item => {
+            const newInfo = {
+              attr_id: item.attr_id,
+              attr_value: item.attr_vals.join(' ')
+            }
+            this.addForm.attrs.push(newInfo)
+          })
+          // 添加静态属性
+          this.onlyTableData.forEach(item => {
+            const newInfo = {
+              attr_id: item.attr_id,
+              attr_value: item.attr_vals
+            }
+            this.addForm.attrs.push(newInfo)
+          })
+          // 用lodash的_.cloneDeep(value)函数深拷贝addForm,修改里面的属性
+          // jquery 也提供一个$.extend可以用来做深拷贝
+          console.log(this.addForm)
+          const postForm = _.cloneDeep(this.addForm)
+          postForm.goods_cat = postForm.goods_cat.join(',')
+          console.log(postForm)
+          const { data: res } = await this.$http.post('goods', postForm)
+          console.log(res)
+          if (res.meta.status !== 201) return this.$message.error(res.meta.msg)
+
+          this.$message.success(res.meta.msg)
+          this.$router.push('/goods')
         }
       })
     }
