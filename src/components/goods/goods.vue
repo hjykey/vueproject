@@ -50,12 +50,7 @@
           align="center"
         >
         </el-table-column>
-        <el-table-column
-          prop="add_time"
-          label="创建时间"
-          width="170"
-          align="center"
-        >
+        <el-table-column label="创建时间" width="170" align="center">
           <template v-slot="props">
             {{ props.row.add_time | dateFormat }}
           </template>
