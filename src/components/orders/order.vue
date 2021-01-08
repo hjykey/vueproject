@@ -65,6 +65,7 @@
                 type="success"
                 icon="el-icon-location"
                 size="small"
+                @click="showProgressDialog"
               ></el-button>
             </el-tooltip>
           </template>
@@ -88,6 +89,7 @@
       title="修改地址"
       :visible.sync="editConsigneeVisible"
       width="50%"
+      @close="EditConsigneeDialogClosed"
     >
       <el-form
         :model="consigneeAddrForm"
@@ -95,8 +97,20 @@
         ref="consigneeAddrFormRef"
         label-width="100px"
       >
-        <el-form-item label="省市区/县" prop="name">
-          <el-input v-model="consigneeAddrForm.name"></el-input>
+        <el-form-item label="省市区/县" prop="address1">
+          <el-cascader
+            v-model="consigneeAddrForm.address1"
+            :options="cityData"
+            :props="{
+              expandTrigger: 'hover',
+              value: 'value',
+              label: 'label',
+              children: 'children'
+            }"
+          ></el-cascader>
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address2">
+          <el-input v-model="consigneeAddrForm.address2"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -104,9 +118,14 @@
         <el-button type="primary" @click="editConsigneeAddr">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 订单物流详情 -->
+    <el-dialog title="物流详情" :visible.sync="progressVisible" width="50%">
+    </el-dialog>
   </div>
 </template>
 <script>
+// 导入中国省市区/县信息
+import cityData from './citydata'
 export default {
   data () {
     return {
@@ -135,8 +154,21 @@ export default {
       // 订单数据表
       ordersDataList: [],
       editConsigneeVisible: false,
-      consigneeAddrForm: [],
-      rules: {}
+      consigneeAddrForm: {
+        address1: [],
+        address2: ''
+      },
+      rules: {
+        address1: [
+          { required: true, message: '请选择省市区/县', trigger: 'blur' }
+        ],
+        address2: [
+          { required: true, message: '请输入详细地址', trigger: 'blur' }
+        ]
+      },
+      cityData,
+      progressVisible: false,
+      progressInfo: []
     }
   },
   created () {
@@ -163,7 +195,20 @@ export default {
     showEditConsigneeDialog (addr) {
       this.editConsigneeVisible = true
     },
-    editConsigneeAddr () {}
+    editConsigneeAddr () {
+      this.editConsigneeVisible = false
+    },
+    EditConsigneeDialogClosed () {
+      this.$refs.consigneeAddrFormRef.resetFields()
+    },
+    async showProgressDialog () {
+      // 请求物流信息,804909574412544580为测试运单号
+      const { data: res } = await this.$http.get('/kuaidi/804909574412544580')
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.progressInfo = res.data
+      console.log(this.progressInfo)
+      this.progressVisible = true
+    }
   }
 }
 </script>
