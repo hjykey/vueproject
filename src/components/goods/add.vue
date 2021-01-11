@@ -300,12 +300,12 @@ export default {
           })
           // 用lodash的_.cloneDeep(value)函数深拷贝addForm,修改里面的属性
           // jquery 也提供一个$.extend可以用来做深拷贝
-          console.log(this.addForm)
+          // console.log(this.addForm)
           const postForm = _.cloneDeep(this.addForm)
           postForm.goods_cat = postForm.goods_cat.join(',')
-          console.log(postForm)
+          // console.log(postForm)
           const { data: res } = await this.$http.post('goods', postForm)
-          console.log(res)
+          // console.log(res)
           if (res.meta.status !== 201) return this.$message.error(res.meta.msg)
 
           this.$message.success(res.meta.msg)

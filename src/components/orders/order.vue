@@ -120,6 +120,16 @@
     </el-dialog>
     <!-- 订单物流详情 -->
     <el-dialog title="物流详情" :visible.sync="progressVisible" width="50%">
+      <el-timeline :reverse="false">
+        <el-timeline-item
+          v-for="(activity, index) in progressInfo"
+          :key="index"
+          :timestamp="activity.ftime"
+          placement="top"
+        >
+          {{ activity.context }}
+        </el-timeline-item>
+      </el-timeline>
     </el-dialog>
   </div>
 </template>
@@ -180,7 +190,7 @@ export default {
         params: this.queryInfo
       })
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
-      console.log(res)
+      // console.log(res)
       this.ordersDataList = res.data.goods
       this.total = res.data.total
     },
@@ -206,7 +216,7 @@ export default {
       const { data: res } = await this.$http.get('/kuaidi/804909574412544580')
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.progressInfo = res.data
-      console.log(this.progressInfo)
+      // console.log(this.progressInfo)
       this.progressVisible = true
     }
   }
