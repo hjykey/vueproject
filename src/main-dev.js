@@ -49,7 +49,7 @@ axios.interceptors.response.use(config => {
 Vue.prototype.$http = axios
 // 全局注册组件,tree-table为自定义名称
 Vue.component('tree-table', TreeTable)
-// 全局过滤器,用来获取指定格式的日期
+// 全局过滤器,用来获取指定格式的日期,类似的组件有day.js（体积小）和moment.js
 Vue.filter('dateFormat', function (originVal) {
   const dt = new Date(originVal)
   const y = dt.getFullYear()
