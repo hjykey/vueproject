@@ -32,7 +32,7 @@ module.exports = {
         .add('./src/main-dev.js')
 
       config.plugin('html').tap(args => {
-        // 添加参数isProd
+        // 添加参数isProd,https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
         args[0].isProd = false
         return args
       })
