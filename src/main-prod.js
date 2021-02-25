@@ -17,18 +17,18 @@ NProgress.configure({ easing: 'ease', speed: 500 })
 Vue.use(VueQuillEditor)
 Vue.config.productionTip = false
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
-axios.interceptors.request.use(config => {
+axios.interceptors.request.use((config) => {
   NProgress.start()
   config.headers.Authorization = window.sessionStorage.getItem('token')
   return config
 })
-axios.interceptors.response.use(config => {
+axios.interceptors.response.use((config) => {
   NProgress.done()
   return config
 })
 Vue.prototype.$http = axios
 Vue.component('tree-table', TreeTable)
-Vue.filter('dateFormat', function (originVal) {
+Vue.filter('dateFormat', function(originVal) {
   const dt = new Date(originVal)
   const y = dt.getFullYear()
   const m = (dt.getMonth() + 1 + '').padStart(2, '0')
@@ -38,7 +38,11 @@ Vue.filter('dateFormat', function (originVal) {
   const ss = (dt.getSeconds() + '').padStart(2, '0')
   return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
 })
+// render: function (createElement) {
+//   return createElement(App);
+// }
+// render 函数得到这个 VNode 节点之后，返回给 Vue.js 的 mount 函数，渲染成真实 DOM 节点，并挂载到根节点上。
 new Vue({
   router,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount('#app')
